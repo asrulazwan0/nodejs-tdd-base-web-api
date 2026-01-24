@@ -11,7 +11,7 @@ A clean, production-ready, TDD-first Node.js + TypeScript starter for RESTful we
 - Linting: ESLint + Prettier
 - Logging: Pino
 - Validation: Zod
-- Docs: OpenAPI 3.0 (Swagger UI optional)
+- Documentation: OpenAPI 3.0 (Swagger UI)
 
 ## Quick Start
 
@@ -52,6 +52,7 @@ npm run build
 - `npm run format` - Format code with Prettier
 - `npm run format:check` - Check if code is formatted correctly
 - `npm run type-check` - Run TypeScript type checking
+- `npm run docs:generate` - Generate OpenAPI documentation
 
 ## TDD Workflow
 
@@ -75,6 +76,9 @@ tests/               # Test files
 ```
 
 ## API Endpoints
+
+### Documentation
+- `GET /api-docs` - Interactive API documentation (Swagger UI)
 
 ### Health Check
 - `GET /health` - Returns the health status of the application

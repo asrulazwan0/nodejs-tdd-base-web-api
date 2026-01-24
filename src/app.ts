@@ -7,6 +7,8 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
+import swaggerJsdoc from 'swagger-jsdoc';
 
 // Load environment variables
 dotenv.config();
@@ -14,9 +16,14 @@ dotenv.config();
 // Import routes
 import { healthRouter } from './routes/health.route';
 import { userRouter } from './routes/user.route';
+import swaggerOptions from '../swagger.config';
 
 // Initialize the app
 const app = express();
+
+// Generate Swagger docs
+const specs = swaggerJsdoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 // Security middleware
 app.use(helmet());
@@ -45,6 +52,7 @@ if (require.main === module) {
   // Only start the server if this file is run directly
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+    console.log(`API Documentation available at http://localhost:${PORT}/api-docs`);
   });
 }
 
