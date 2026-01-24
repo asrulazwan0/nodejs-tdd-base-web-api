@@ -26,7 +26,11 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "type-check": "tsc --noEmit",
-    "docs:generate": "node generate-docs.js"
+    "docs:generate": "node generate-docs.js",
+    "typeorm": "typeorm-ts-node-commonjs",
+    "typeorm:run-migrations": "npm run typeorm -- migration:run",
+    "typeorm:generate-migration": "npm run typeorm -- migration:generate ./src/migrations/",
+    "typeorm:create-migration": "npm run typeorm -- migration:create ./src/migrations/"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
@@ -51,13 +55,18 @@
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
+    "dotenv": "^16.6.1",
     "express": "^5.0.1",
     "helmet": "^8.0.0",
+    "mysql2": "^3.16.1",
     "pino": "^9.5.0",
     "pino-pretty": "^13.0.0",
+    "reflect-metadata": "^0.2.2",
+    "sqlite3": "^5.1.7",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
+    "typedi": "^0.10.0",
+    "typeorm": "^0.3.28",
     "uuid": "^8.3.2",
     "zod": "^3.24.1"
   }

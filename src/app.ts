@@ -9,6 +9,10 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
+import { useContainer } from 'typeorm';
+import { Container } from 'typedi';
+import { AppDataSource } from './config/database';
+import { UserRepository } from './repositories/UserRepository';
 
 // Load environment variables
 dotenv.config();
@@ -17,6 +21,9 @@ dotenv.config();
 import { healthRouter } from './routes/health.route';
 import { userRouter } from './routes/user.route';
 import swaggerOptions from '../swagger.config';
+
+// Tell TypeORM to use the global container
+useContainer(Container);
 
 // Initialize the app
 const app = express();
@@ -34,6 +41,18 @@ app.use(cors());
 // Parse JSON bodies
 app.use(express.json());
 
+// Initialize database connection and register repositories
+AppDataSource.initialize()
+  .then(() => {
+    console.log('Data Source has been initialized!');
+
+    // Register repositories in the container
+    Container.set(UserRepository, new UserRepository(AppDataSource));
+  })
+  .catch((err) => {
+    console.error('Error during Data Source initialization:', err);
+  });
+
 // Health check route
 app.use('/health', healthRouter);
 
@@ -44,6 +63,13 @@ app.use('/users', userRouter);
 app.use((err: Error, _req: express.Request, res: express.Response) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
+});
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.info('SIGTERM signal received: closing DB connections');
+  await AppDataSource.destroy();
+  process.exit(0);
 });
 
 const PORT = process.env.PORT || 3000;

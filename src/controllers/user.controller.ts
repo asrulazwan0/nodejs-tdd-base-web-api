@@ -18,9 +18,9 @@ import { CreateUserInputSchema, UpdateUserInputSchema } from '../types/user';
  * @param req - Express request object
  * @param res - Express response object
  */
-export const getUsers = (_req: Request, res: Response): void => {
+export const getUsers = async (_req: Request, res: Response): Promise<void> => {
   try {
-    const users = getAllUsers();
+    const users = await getAllUsers();
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ error: 'Failed to retrieve users' });
@@ -32,10 +32,10 @@ export const getUsers = (_req: Request, res: Response): void => {
  * @param req - Express request object
  * @param res - Express response object
  */
-export const getUser = (req: Request<{ id: string }>, res: Response): void => {
+export const getUser = async (req: Request<{ id: string }>, res: Response): Promise<void> => {
   try {
     const userId = req.params.id;
-    const user = getUserById(userId);
+    const user = await getUserById(userId);
 
     if (!user) {
       res.status(404).json({ error: 'User not found' });
@@ -53,12 +53,12 @@ export const getUser = (req: Request<{ id: string }>, res: Response): void => {
  * @param req - Express request object
  * @param res - Express response object
  */
-export const createUserHandler = (req: Request, res: Response): void => {
+export const createUserHandler = async (req: Request, res: Response): Promise<void> => {
   try {
     // Validate input using Zod
     const validatedData = CreateUserInputSchema.parse(req.body);
-    
-    const newUser = createUser(validatedData);
+
+    const newUser = await createUser(validatedData);
     res.status(201).json(newUser);
   } catch (error: any) {
     if (error.name === 'ZodError') {
@@ -74,14 +74,14 @@ export const createUserHandler = (req: Request, res: Response): void => {
  * @param req - Express request object
  * @param res - Express response object
  */
-export const updateUserHandler = (req: Request<{ id: string }>, res: Response): void => {
+export const updateUserHandler = async (req: Request<{ id: string }>, res: Response): Promise<void> => {
   try {
     const userId = req.params.id;
 
     // Validate input using Zod
     const validatedData = UpdateUserInputSchema.parse(req.body);
 
-    const updatedUser = updateUser(userId, validatedData);
+    const updatedUser = await updateUser(userId, validatedData);
 
     if (!updatedUser) {
       res.status(404).json({ error: 'User not found' });
@@ -103,10 +103,10 @@ export const updateUserHandler = (req: Request<{ id: string }>, res: Response): 
  * @param req - Express request object
  * @param res - Express response object
  */
-export const deleteUserHandler = (req: Request<{ id: string }>, res: Response): void => {
+export const deleteUserHandler = async (req: Request<{ id: string }>, res: Response): Promise<void> => {
   try {
     const userId = req.params.id;
-    const deleted = deleteUser(userId);
+    const deleted = await deleteUser(userId);
 
     if (!deleted) {
       res.status(404).json({ error: 'User not found' });

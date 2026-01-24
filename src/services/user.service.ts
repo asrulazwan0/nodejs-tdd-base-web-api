@@ -3,19 +3,23 @@
  * Contains business logic for user operations
  */
 
-import { User, CreateUserInput, UpdateUserInput } from '../types/user';
-import { v4 as uuidv4 } from 'uuid';
-
-// In-memory storage for demonstration purposes
-// In a real application, this would be replaced with a database
-const users: User[] = [];
+import { User } from '../entities/User';
+import { CreateUserInput, UpdateUserInput } from '../types/user';
+import { UserRepository } from '../repositories/UserRepository';
+import { Container } from 'typedi';
 
 /**
  * Get all users
  * @returns Array of all users
  */
-export const getAllUsers = (): User[] => {
-  return users;
+export const getAllUsers = async (): Promise<User[]> => {
+  try {
+    const userRepository = Container.get(UserRepository);
+    return await userRepository.findAll();
+  } catch (error) {
+    console.error('Error retrieving users:', error);
+    throw error;
+  }
 };
 
 /**
@@ -23,8 +27,14 @@ export const getAllUsers = (): User[] => {
  * @param id - User ID
  * @returns User object or null if not found
  */
-export const getUserById = (id: string): User | null => {
-  return users.find(user => user.id === id) || null;
+export const getUserById = async (id: string): Promise<User | null> => {
+  try {
+    const userRepository = Container.get(UserRepository);
+    return await userRepository.findById(id);
+  } catch (error) {
+    console.error('Error retrieving user:', error);
+    throw error;
+  }
 };
 
 /**
@@ -32,18 +42,21 @@ export const getUserById = (id: string): User | null => {
  * @param userData - User data to create
  * @returns Created user object
  */
-export const createUser = (userData: CreateUserInput): User => {
-  const newUser: User = {
-    id: uuidv4(),
-    email: userData.email,
-    firstName: userData.firstName,
-    lastName: userData.lastName,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+export const createUser = async (userData: CreateUserInput): Promise<User> => {
+  try {
+    const userRepository = Container.get(UserRepository);
 
-  users.push(newUser);
-  return newUser;
+    const newUser = await userRepository.create({
+      email: userData.email,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+    });
+
+    return newUser;
+  } catch (error) {
+    console.error('Error creating user:', error);
+    throw error;
+  }
 };
 
 /**
@@ -52,26 +65,21 @@ export const createUser = (userData: CreateUserInput): User => {
  * @param userData - Updated user data
  * @returns Updated user object or null if not found
  */
-export const updateUser = (id: string, userData: UpdateUserInput): User | null => {
-  const userIndex = users.findIndex(user => user.id === id);
+export const updateUser = async (id: string, userData: UpdateUserInput): Promise<User | null> => {
+  try {
+    const userRepository = Container.get(UserRepository);
 
-  if (userIndex === -1) {
-    return null;
+    const updatedUser = await userRepository.update(id, {
+      email: userData.email,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+    });
+
+    return updatedUser;
+  } catch (error) {
+    console.error('Error updating user:', error);
+    throw error;
   }
-
-  // Update user properties
-  const userToUpdate = users[userIndex]!;
-  const updatedUser: User = {
-    id: userToUpdate.id,
-    email: userData.email ?? userToUpdate.email,
-    firstName: userData.firstName ?? userToUpdate.firstName,
-    lastName: userData.lastName ?? userToUpdate.lastName,
-    createdAt: userToUpdate.createdAt,
-    updatedAt: new Date(),
-  };
-
-  users[userIndex] = updatedUser;
-  return updatedUser;
 };
 
 /**
@@ -79,13 +87,12 @@ export const updateUser = (id: string, userData: UpdateUserInput): User | null =
  * @param id - User ID to delete
  * @returns True if deleted, false if not found
  */
-export const deleteUser = (id: string): boolean => {
-  const initialLength = users.length;
-  const userIndex = users.findIndex(user => user.id === id);
-
-  if (userIndex !== -1) {
-    users.splice(userIndex, 1);
+export const deleteUser = async (id: string): Promise<boolean> => {
+  try {
+    const userRepository = Container.get(UserRepository);
+    return await userRepository.delete(id);
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    throw error;
   }
-
-  return users.length !== initialLength;
 };
