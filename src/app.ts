@@ -13,6 +13,7 @@ dotenv.config();
 
 // Import routes
 import { healthRouter } from './routes/health.route';
+import { userRouter } from './routes/user.route';
 
 // Initialize the app
 const app = express();
@@ -28,6 +29,9 @@ app.use(express.json());
 
 // Health check route
 app.use('/health', healthRouter);
+
+// User routes
+app.use('/users', userRouter);
 
 // Error handling middleware
 app.use((err: Error, _req: express.Request, res: express.Response) => {

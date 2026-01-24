@@ -61,15 +61,59 @@ Every feature must start with a failing test. Follow the Red → Green → Refac
 
 ```
 src/
-├── app/           # Application entry point
-├── controllers/   # Request handlers
-├── domain/        # Business logic and entities
-├── infrastructure/ # External integrations
-├── middleware/    # Express middleware
-├── routes/        # Route definitions
-├── services/      # Business logic
-├── types/         # Type definitions
-├── utils/         # Utility functions
+├── app/              # Application entry point
+├── controllers/      # Request handlers
+├── domain/           # Business logic and entities
+├── infrastructure/   # External integrations
+├── middleware/       # Express middleware
+├── routes/           # Route definitions
+├── services/         # Business logic
+├── types/            # Type definitions
+├── utils/            # Utility functions
 └── ...
-tests/            # Test files
+tests/               # Test files
+```
+
+## API Endpoints
+
+### Health Check
+- `GET /health` - Returns the health status of the application
+
+### Users
+- `GET /users` - Retrieve all users
+- `GET /users/:id` - Retrieve a specific user by ID
+- `POST /users` - Create a new user
+- `PUT /users/:id` - Update an existing user
+- `DELETE /users/:id` - Delete a user
+
+#### User Object
+```json
+{
+  "id": "uuid-string",
+  "email": "user@example.com",
+  "firstName": "John",
+  "lastName": "Doe",
+  "createdAt": "2023-01-01T00:00:00.000Z",
+  "updatedAt": "2023-01-01T00:00:00.000Z"
+}
+```
+
+#### Creating a User
+Request body:
+```json
+{
+  "email": "john.doe@example.com",
+  "firstName": "John",
+  "lastName": "Doe"
+}
+```
+
+#### Updating a User
+Request body (all fields optional):
+```json
+{
+  "email": "newemail@example.com",
+  "firstName": "Jane",
+  "lastName": "Smith"
+}
 ```
