@@ -15,6 +15,8 @@ A clean, production-ready, TDD-first Node.js + TypeScript starter for RESTful we
 
 ## Quick Start
 
+### Without Docker
+
 1. Install dependencies:
 
 ```bash
@@ -38,6 +40,21 @@ npm run dev
 ```bash
 npm run build
 ```
+
+### With Docker
+
+1. Build and run with Docker Compose:
+
+```bash
+# For production
+docker-compose up --build
+
+# For development
+docker-compose -f docker-compose.dev.yml up --build
+```
+
+2. The application will be available at `http://localhost:3000`
+3. The API documentation will be available at `http://localhost:3000/api-docs`
 
 ## Available Scripts
 

@@ -41,17 +41,32 @@ app.use(cors());
 // Parse JSON bodies
 app.use(express.json());
 
-// Initialize database connection and register repositories
-AppDataSource.initialize()
-  .then(() => {
-    console.log('Data Source has been initialized!');
+// Function to initialize database with retry logic
+async function initializeDatabaseWithRetry(maxRetries: number, delayMs: number) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await AppDataSource.initialize();
+      console.log('Data Source has been initialized!');
 
-    // Register repositories in the container
-    Container.set(UserRepository, new UserRepository(AppDataSource));
-  })
-  .catch((err) => {
-    console.error('Error during Data Source initialization:', err);
-  });
+      // Register repositories in the container
+      Container.set(UserRepository, new UserRepository(AppDataSource));
+      return;
+    } catch (err) {
+      console.error(`Database initialization failed (attempt ${attempt}/${maxRetries}):`, err);
+
+      if (attempt === maxRetries) {
+        console.error('Max retries reached. Exiting...');
+        process.exit(1);
+      }
+
+      // Wait before retrying
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+}
+
+// Initialize database connection with retry logic
+initializeDatabaseWithRetry(10, 3000); // Retry up to 10 times with 3-second delays
 
 // Health check route
 app.use('/health', healthRouter);
