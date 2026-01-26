@@ -13,7 +13,7 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_NAME || 'nodejs_tdd_api',
   synchronize: process.env.NODE_ENV !== 'production', // Only use in development
   logging: process.env.NODE_ENV !== 'production',
-  entities: [`${__dirname}/entities/*.{ts,js}`],
-  migrations: [`${__dirname}/migrations/*.{ts,js}`],
-  subscribers: [`${__dirname}/subscribers/*.{ts,js}`],
+  entities: [`${__dirname}/../entities/*.{ts,js}`],
+  migrations: [`${__dirname}/../migrations/*.{ts,js}`],
+  subscribers: [`${__dirname}/../subscribers/*.{ts,js}`],
 });
