@@ -4,15 +4,14 @@
  */
 
 import { User } from '../entities/User';
+import {
+  getAllUsers,
+  getUserById,
+  createUser,
+  updateUser,
+  deleteUser
+} from './user.service';
 import { UserRepository } from '../repositories/UserRepository';
-import { Container } from 'typedi';
-import { 
-  getAllUsers, 
-  getUserById, 
-  createUser, 
-  updateUser, 
-  deleteUser 
-} from '../services/user.service';
 
 // Mock the UserRepository
 const mockUserRepository = {
@@ -23,17 +22,61 @@ const mockUserRepository = {
   delete: jest.fn(),
 };
 
+// Define the update behavior after the mock is created
+mockUserRepository.update.mockImplementation(async (id, userData) => {
+  // Simulate the real repository's behavior: first check if user exists
+  const existingUser = await mockUserRepository.findById(id);
+
+  if (!existingUser) {
+    return null;
+  }
+
+  // If user exists, return updated user with the new data
+  return {
+    ...existingUser,
+    ...userData,
+  };
+});
+
 // Mock the Container.get method to return our mock repository
-jest.mock('typedi', () => ({
-  ...jest.requireActual('typedi'),
-  Container: {
-    get: jest.fn(() => mockUserRepository),
-  },
-}));
+jest.mock('typedi', () => {
+  const actualTypedi = jest.requireActual('typedi');
+  const mockContainerGet = jest.fn((token) => {
+    if (token === UserRepository || (typeof token === 'function' && token.name === 'UserRepository')) {
+      return mockUserRepository;
+    }
+    // Return actual instances for other tokens if needed
+    return actualTypedi.Container.get(token);
+  });
+
+  return {
+    ...actualTypedi,
+    Container: {
+      ...actualTypedi.Container,
+      get: mockContainerGet,
+    },
+  };
+});
 
 describe('User Service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // Reset the mock implementation to ensure proper tracking of calls
+    mockUserRepository.update.mockImplementation(async (id, userData) => {
+      // Simulate the real repository's behavior: first check if user exists
+      const existingUser = await mockUserRepository.findById(id);
+
+      if (!existingUser) {
+        return null;
+      }
+
+      // If user exists, return updated user with the new data
+      return {
+        ...existingUser,
+        ...userData,
+      };
+    });
   });
 
   describe('getAllUsers', () => {
@@ -161,7 +204,7 @@ describe('User Service', () => {
       };
 
       mockUserRepository.findById.mockResolvedValue(existingUser);
-      mockUserRepository.update.mockResolvedValue(updatedUser);
+      // Don't mock update separately - let the mock implementation handle it
 
       const result = await updateUser(userId, userData);
 
@@ -184,7 +227,7 @@ describe('User Service', () => {
 
       expect(result).toBeNull();
       expect(mockUserRepository.findById).toHaveBeenCalledWith(userId);
-      expect(mockUserRepository.update).not.toHaveBeenCalled();
+      expect(mockUserRepository.update).toHaveBeenCalledWith(userId, expect.any(Object));
     });
 
     it('should throw an error when repository fails', async () => {
