@@ -42,4 +42,4 @@ Stop the listener with SIGTERM/SIGINT. It stops accepting requests, drains in-fl
 - `Existing users table`: follow the reviewed adoption path above.
 - Test guard failure: supply a separate `_test` database, all test credentials and explicit reset opt-in.
 - Port conflict: select another `PORT`/`DB_PORT`; do not stop another project's services.
-- Format differences across Windows/Linux: `.gitattributes` fixes text to LF. Use the supported formatter and avoid checking in generated `dist`, test output or personal agent files.
+- Format differences across Windows/Linux: `.gitattributes` fixes text to LF. Use the supported formatter and avoid checking in generated `dist`, test output or local configuration files.

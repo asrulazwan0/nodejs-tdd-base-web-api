@@ -28,7 +28,7 @@ Local final logs: `/tmp/tdd-final-check.log`, `/tmp/tdd-final-coverage.log`, `/t
 
 Upstream commit `165dc6743a1a64a868c9e2084277a65f59008cf0` failed production startup (wrong compiled path), 9 of 24 original tests, lint (76 errors), formatting (30 files), and dependency audit (56 findings). Latest upstream CI also failed. No stable tags/releases were present.
 
-Windows clone: `C:\Dev\Projects\nodejs-tdd-web-api-starter`; Linux clone: `/home/hyperzecter/projects/nodejs-tdd-base-web-api`. Original tracked Windows differences were CRLF-only in `.env.example`, `.gitignore` and `LICENSE`. The separate `C:\Dev\Projects\nodejs-tdd-base-web-api` directory is an empty initialized Git repository, not the source clone. Personal environment and untracked agent files are preserved.
+Windows clone: `C:\Dev\Projects\nodejs-tdd-web-api-starter`; Linux clone: `/home/hyperzecter/projects/nodejs-tdd-base-web-api`. Original tracked Windows differences were CRLF-only in `.env.example`, `.gitignore` and `LICENSE`. The separate `C:\Dev\Projects\nodejs-tdd-base-web-api` directory is an empty initialized Git repository, not the source clone. Local environment configuration was preserved during release verification.
 
 ## Red evidence
 

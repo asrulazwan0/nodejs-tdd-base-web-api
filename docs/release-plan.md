@@ -21,7 +21,7 @@ Fresh exact-commit and annotated-tag archives passed installation, quality check
 
 The annotated `v1.0.0` tag resolves to that merge commit. The GitHub release was published at `2026-10-04T10:06:53Z`; readback confirmed it is stable, not a draft, and the latest release. Follow-up completion documentation does not move this tag. [Verification evidence](verification-evidence.md) records hashes and final results.
 
-Verification removed only the disposable test containers and volumes it created. The existing Windows clone and Linux checkout received the release source; personal Windows environment and agent files remain local. Repository template/private vulnerability reporting and strict seven-check main protection were read back successfully.
+Verification removed only the disposable test containers and volumes it created. The existing Windows clone and Linux checkout received the release source; local Windows environment configuration was preserved during release verification. Repository template/private vulnerability reporting and strict seven-check main protection were read back successfully.
 
 ## Released capabilities
 

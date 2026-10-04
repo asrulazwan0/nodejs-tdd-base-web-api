@@ -138,5 +138,5 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# Explicit test examples and personal agent tooling
+# Explicit test environment example
 !.env.test.example
