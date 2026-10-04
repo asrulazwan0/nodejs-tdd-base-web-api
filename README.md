@@ -2,6 +2,8 @@
 
 A small, test-first TypeScript and Express API foundation with Jest, Supertest, MySQL 8.4 and TypeORM. Start natively or in Docker. This is a source/template repository, not an npm package.
 
+Verified stable baseline: [v1.0.0](https://github.com/asrulazwan0/nodejs-tdd-base-web-api/releases/tag/v1.0.0). See [release evidence](docs/verification-evidence.md) for the exact source, checks and supported workflows.
+
 The complete profile CRUD example demonstrates controllers → services → repositories. Explicit constructor dependencies make unit tests small; HTTP tests construct the same application as the running server; real MySQL tests prove migrations, uniqueness races and persistence. No global mocks or separate test app are required.
 
 This example has no authentication or authorization. Profiles are not login accounts. Add your own access policy before exposing profile operations in a consuming application.
@@ -24,9 +26,14 @@ TDD and clean architecture can be used together. Both projects require meaningfu
 Requirements: Node.js 24, npm 11, and a reachable MySQL 8.4 server. Provision a separate application database and application role first; see [database setup](docs/operations.md). Docker is optional.
 
 ```sh
+git clone --branch v1.0.0 https://github.com/asrulazwan0/nodejs-tdd-base-web-api.git
+cd nodejs-tdd-base-web-api
+git switch -c my-api
 npm ci
 cp .env.example .env
 ```
+
+This starts a work branch from the fixed release. If you already cloned the repository, run the install/setup commands inside that checkout. GitHub's **Use this template** starts from current main.
 
 In PowerShell, use `Copy-Item .env.example .env`. Edit `.env` to select your database and credentials. Environment variables supplied by your shell take precedence. The application does not create databases, synchronize schemas, or run migrations automatically.
 
@@ -108,6 +115,6 @@ Liveness is `/health/live` (also `/health`); readiness is `/health/ready`. CORS 
 
 ## Make it your project
 
-Update package identity, repository/homepage/bugs links, docs and changelog after cloning or using the template. Keep the MIT notice. Follow [contributing](CONTRIBUTING.md), [security](SECURITY.md), and [operations](docs/operations.md). [Release readiness](docs/release-checklist.md) records completed checks and remaining gates.
+Update package identity, repository/homepage/bugs links, docs and changelog after cloning or using the template. Keep the MIT notice. Follow [contributing](CONTRIBUTING.md), [security](SECURITY.md), and [operations](docs/operations.md). [Release readiness](docs/release-checklist.md) records the completed publication gates.
 
 Licensed under [MIT](LICENSE).

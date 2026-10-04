@@ -2,7 +2,7 @@
 
 Scope: a small TDD-first TypeScript/Express/MySQL/Jest profile CRUD starter, verified in native and Docker workflows. This is source/template distribution; no npm package, registry image or hosted application is implied.
 
-The package's existing `1.0.0` metadata has never been published as a verified release. The first candidate retains `1.0.0` and aligns the MIT metadata with the existing MIT license text.
+Status: completed on 2026-10-04. [Stable v1.0.0](https://github.com/asrulazwan0/nodejs-tdd-base-web-api/releases/tag/v1.0.0) retains the package's existing version and aligns the MIT metadata with the existing MIT license text.
 
 ## Publication gates
 
@@ -13,9 +13,17 @@ The package's existing `1.0.0` metadata has never been published as a verified r
 5. Tag the verified commit `v1.0.0`, publish accurate GitHub source-release notes, and verify tag/release/archive identity.
 6. Update both local checkouts and record cleanup/limits without moving the published tag.
 
-Merge/tag/release/settings changes are public repository actions beyond preparing the candidate. The draft PR and verified local candidate make those actions concrete and reviewable.
+## Execution record
 
-## Release notes prepared
+[PR #1](https://github.com/asrulazwan0/nodejs-tdd-base-web-api/pull/1) merged through normal branch protection after all seven [final candidate checks](https://github.com/asrulazwan0/nodejs-tdd-base-web-api/actions/runs/37193565898) passed. The exact main merge result `df0279a0c60b2fdacb2540d6bc4b6b604ef6a590` also passed all seven [main checks](https://github.com/asrulazwan0/nodejs-tdd-base-web-api/actions/runs/37193731011).
+
+Fresh exact-commit and annotated-tag archives passed installation, quality checks, dependency audit and compiled native migration/startup/HTTP smoke against an isolated MySQL schema. All 67 tracked files matched the release commit, including executable bits. The published source archive matched the verified tag download byte-for-byte.
+
+The annotated `v1.0.0` tag resolves to that merge commit. The GitHub release was published at `2026-10-04T10:06:53Z`; readback confirmed it is stable, not a draft, and the latest release. Follow-up completion documentation does not move this tag. [Verification evidence](verification-evidence.md) records hashes and final results.
+
+Verification removed only the disposable test containers and volumes it created. The existing Windows clone and Linux checkout received the release source; personal Windows environment and agent files remain local. Repository template/private vulnerability reporting and strict seven-check main protection were read back successfully.
+
+## Released capabilities
 
 - Working TypeScript/Express profile CRUD, MySQL migrations, and native/Docker quickstarts.
 - Jest test-first contributor workflow with runnable red/green/refactor example and real database acceptance checks.
