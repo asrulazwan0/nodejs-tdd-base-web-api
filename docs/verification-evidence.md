@@ -1,6 +1,28 @@
 # Verification evidence
 
-Prepared 2026-10-04. Work branch: `feat/verified-tdd-starter`.
+Completed 2026-10-04. Implementation branch: `feat/verified-tdd-starter`. Earlier candidate counts below are retained as historical evidence; the following release record is authoritative.
+
+## Published v1.0.0
+
+[Stable release](https://github.com/asrulazwan0/nodejs-tdd-base-web-api/releases/tag/v1.0.0): published `2026-10-04T10:06:53Z`, release commit `df0279a0c60b2fdacb2540d6bc4b6b604ef6a590`, annotated tag object `771ed6b8e04b4dad234fdd1d082a956c98e97328`. Release/latest readback confirmed `isDraft: false`, `isPrerelease: false`, and the intended commit.
+
+| Verification               | Final result                                                                                                              |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Linux and native Windows   | Install, format, lint, types, 68 unit/HTTP tests and build passed; compiled migration/startup/real HTTP smoke passed      |
+| Real MySQL 8.4.11          | 12 integration tests passed; combined suite: 80 tests                                                                     |
+| Full-source coverage       | 93.20% statements, 85.85% branches, 91.93% functions, 93.62% lines; all thresholds passed                                 |
+| Dependency audit           | Zero findings, no exceptions                                                                                              |
+| Exact release CI           | All seven jobs passed on both the final PR source and the main release commit                                             |
+| Release archive adoption   | Exact-commit and tag downloads passed clean installation, quality, audit and compiled native migration/startup/HTTP smoke |
+| Clean architecture starter | Fresh quality check passed: 66 unit and 30 HTTP tests; existing released PostgreSQL/container evidence retained           |
+
+Durable runs: [final PR CI 37193565898](https://github.com/asrulazwan0/nodejs-tdd-base-web-api/actions/runs/37193565898), [exact main CI 37193731011](https://github.com/asrulazwan0/nodejs-tdd-base-web-api/actions/runs/37193731011). The seven jobs cover Linux/Windows/macOS native quality, real MySQL/coverage/compiled smoke, isolated container tests and production adoption from the exact GitHub source archive, Docker development source reload, and secret scanning. [PR #1](https://github.com/asrulazwan0/nodejs-tdd-base-web-api/pull/1) merged normally without bypassing protection.
+
+The two local native runtime checks used disposable schemas in a Docker-supplied MySQL server. Native Windows MySQL installation is not claimed. Linux verifies graceful SIGTERM shutdown; Windows verifies child termination cleanup. macOS CI verifies installation/quality/tests/build, not a native MySQL runtime. Docker production verifies fresh-schema migration/readiness/HTTP behavior, non-root runtime and the application license; Docker development verifies actual source reload and restoration.
+
+Archive identity: 67 tracked files match in content and executable bits. Exact-commit archive SHA-256: `e6a56fd9bfc9d40b1957463c646634cb29e92283e153a677779c63ee4069486e`. Annotated-tag archive SHA-256: `72c85f02c603f605dd3e719244658b8a6cb92a1d2b34fe85db4e2eb87f23beea`. A download after publication matched the verified tag archive byte-for-byte. The tag remains fixed when completion documentation changes main.
+
+Local final logs: `/tmp/tdd-final-check.log`, `/tmp/tdd-final-coverage.log`, `/tmp/tdd-windows-final-check.log`, `/tmp/tdd-windows-final-coverage.log`, `/tmp/tdd-release-source-native.log`, `/tmp/tdd-tag-native.log`; archive manifest: `/tmp/tdd-v1.0.0-archive-manifest.json`. These local logs supplement the durable CI links. Verification containers and their own disposable volumes were removed; existing user databases and personal local configuration were preserved.
 
 ## Baseline
 
