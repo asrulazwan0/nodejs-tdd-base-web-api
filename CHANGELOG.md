@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 — 2026-10-04 (release candidate)
+## 1.0.0 — 2026-10-04
 
 - Reject Unicode control characters and undefined-only service updates before repository work.
 - Repair the compiled entry point, remove global container mocks, and share app construction between tests and runtime.

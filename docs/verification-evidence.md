@@ -39,3 +39,5 @@ Two additional unit regressions were confirmed red before fixes: C1 control char
 All seven checks passed for [CI 37192783974](https://github.com/asrulazwan0/nodejs-tdd-base-web-api/actions/runs/37192783974) at `dd38b52be479d0f83fe4aab31252f838be722a96`. The final input changes require their own exact-candidate CI before merge/publication.
 
 Repository settings were read back: GitHub template enabled, private vulnerability reporting enabled, and strict main protection requires all seven CI contexts, enforces administrators, and prevents force pushes/deletions. Independent human approvals are not required in this sole-maintainer repository; merges must satisfy checks normally.
+
+Final source checks passed all 79 tests, including 12 real MySQL tests. Full-source coverage is 93.56% statements, 89.47% branches, 91.93% functions and 94.00% lines. The 80/70/80/80 thresholds remain unchanged. `npm run check` passed 67 unit/HTTP tests plus format/lint/types/build. Source fix commit: `3fe041d`.
