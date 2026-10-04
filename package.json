@@ -2,7 +2,7 @@
   "name": "nodejs-tdd-web-api-starter",
   "version": "1.0.0",
   "description": "A verified test-first TypeScript and Express API starter with Jest, MySQL, native development, and Docker.",
-  "homepage": "https://github.com/asrulazwan0/nodejs-tdd-base-web-api#readme",
+  "homepage": "https://asrulazwan0.github.io/nodejs-tdd-base-web-api/",
   "bugs": {
     "url": "https://github.com/asrulazwan0/nodejs-tdd-base-web-api/issues"
   },
@@ -25,7 +25,7 @@
     "test:integration": "node scripts/test.mjs integration",
     "test:coverage": "node scripts/test.mjs coverage",
     "test:docker": "node scripts/test-docker.mjs",
-    "lint": "eslint src tests scripts *.cjs",
+    "lint": "eslint src tests scripts *.cjs docs/site/*.js",
     "lint:fix": "npm run lint -- --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -37,7 +37,9 @@
     "migration:run:prod": "node --env-file-if-exists=.env dist/config/migrate.js run",
     "smoke": "node scripts/smoke.mjs",
     "audit": "npm audit --audit-level=low",
-    "docs:generate": "node scripts/docs.mjs"
+    "docs:generate": "node scripts/docs.mjs",
+    "docs:build": "node scripts/docs-build.mjs",
+    "docs:preview": "node scripts/docs-preview.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -50,6 +52,7 @@
     "eslint": "^10.0.1",
     "globals": "^17.0.0",
     "jest": "^30.5.2",
+    "marked": "^18.0.14",
     "prettier": "^3.8.1",
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.14",

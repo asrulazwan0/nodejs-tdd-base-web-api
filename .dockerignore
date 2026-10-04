@@ -8,3 +8,4 @@ coverage
 !.env.test.example
 *.log
 *.tsbuildinfo
+.site/
