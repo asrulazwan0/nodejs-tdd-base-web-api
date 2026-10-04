@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add a searchable GitHub Pages documentation site with a generated OpenAPI reference, mobile navigation, and light/dark themes.
+
 ## 1.0.0 — 2026-10-04
 
 - Reject Unicode control characters and undefined-only service updates before repository work.

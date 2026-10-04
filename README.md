@@ -2,6 +2,8 @@
 
 A small, test-first TypeScript and Express API foundation with Jest, Supertest, MySQL 8.4 and TypeORM. Start natively or in Docker. This is a source/template repository, not an npm package.
 
+[Documentation website](https://asrulazwan0.github.io/nodejs-tdd-base-web-api/) · [Local website preview and publishing](docs/documentation-site.md)
+
 Verified stable baseline: [v1.0.0](https://github.com/asrulazwan0/nodejs-tdd-base-web-api/releases/tag/v1.0.0). See [release evidence](docs/verification-evidence.md) for the exact source, checks and supported workflows.
 
 The complete profile CRUD example demonstrates controllers → services → repositories. Explicit constructor dependencies make unit tests small; HTTP tests construct the same application as the running server; real MySQL tests prove migrations, uniqueness races and persistence. No global mocks or separate test app are required.
