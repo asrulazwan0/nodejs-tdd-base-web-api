@@ -6,7 +6,5 @@ coverage
 .env.*
 !.env.example
 !.env.test.example
-.qwen
-QWEN.md
 *.log
 *.tsbuildinfo
