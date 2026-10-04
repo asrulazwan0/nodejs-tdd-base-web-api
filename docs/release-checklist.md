@@ -15,4 +15,4 @@ Status: complete. [Stable v1.0.0](https://github.com/asrulazwan0/nodejs-tdd-base
 - [x] Repository release/template/security settings verified.
 - [x] Tag/archive/GitHub source release published and verified.
 
-[Verification evidence](verification-evidence.md) records commands, revisions and limitations. Both local checkouts must contain the intended source; preserved local environment/agent files are not release assets. Existing production/development databases are never reset by verification.
+[Verification evidence](verification-evidence.md) records commands, revisions and limitations. Both local checkouts must contain the intended source; local environment configuration is excluded from release assets. Existing production/development databases are never reset by verification.

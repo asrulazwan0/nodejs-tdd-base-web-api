@@ -10,4 +10,4 @@ Tests live under `tests/unit`, `tests/http`, and `tests/integration`. Use contro
 
 Update OpenAPI before changing observable API behavior. Regenerate the Postman collection with `npm run docs:generate`. Include migration and compatibility notes in the changelog. Do not modify a migration already applied to a released database.
 
-Use the formatter and lint rules supplied by the repository. Keep source/template metadata, secrets and personal agent configuration out of commits. Keep changes reviewable and describe the resulting behavior, reproduction and verification in your PR.
+Use the formatter and lint rules supplied by the repository. Keep source/template metadata, secrets and local tool configuration out of commits. Keep changes reviewable and describe the resulting behavior, reproduction and verification in your PR.
