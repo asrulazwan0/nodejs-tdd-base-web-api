@@ -115,3 +115,17 @@ test('migration CLI refuses invalid and unapproved destructive commands before c
     else process.env.DB_PASSWORD = original;
   }
 });
+
+test('C1 control characters reject before persistence', async () => {
+  await expect(service.create({ ...input, firstName: 'C1\u0085Name' })).rejects.toMatchObject({
+    name: 'ZodError',
+  });
+  expect(repo.data.size).toBe(0);
+});
+test('undefined-only service updates reject before repository work', async () => {
+  const update = jest.spyOn(repo, 'update');
+  await expect(service.update(randomUUID(), { firstName: undefined })).rejects.toMatchObject({
+    name: 'ZodError',
+  });
+  expect(update).not.toHaveBeenCalled();
+});

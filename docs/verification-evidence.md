@@ -31,3 +31,11 @@ A fresh `git archive` extraction passed `npm ci`, `npm run check` and compiled n
 Draft [PR #1](https://github.com/asrulazwan0/nodejs-tdd-base-web-api/pull/1) makes the result reviewable. Initial [candidate CI](https://github.com/asrulazwan0/nodejs-tdd-base-web-api/actions/runs/37192588151) was in progress when this evidence update was prepared; final CI/publication are separate gates. Local logs include `/tmp/tdd-check.log`, `/tmp/tdd-coverage.log`, `/tmp/tdd-native.log`, `/tmp/tdd-final-audit.json`, `/tmp/tdd-production.log` and `/tmp/tdd-docker-tests.log`. Durable exact-candidate CI is required before a stable release.
 
 The clean architecture starter also passed a fresh local `npm run check` with its 66 unit/30 HTTP tests; its released PostgreSQL/container verification remains recorded in that project's existing release evidence.
+
+## Final input review
+
+Two additional unit regressions were confirmed red before fixes: C1 control characters in profile names and undefined-only direct service updates. They now reject before repository work. The final suite has 79 tests (67 unit/HTTP, 12 MySQL integration). Prior 77-test evidence above records the earlier verified candidate. Local red log: `/tmp/tdd-red-final-boundaries.log`.
+
+All seven checks passed for [CI 37192783974](https://github.com/asrulazwan0/nodejs-tdd-base-web-api/actions/runs/37192783974) at `dd38b52be479d0f83fe4aab31252f838be722a96`. The final input changes require their own exact-candidate CI before merge/publication.
+
+Repository settings were read back: GitHub template enabled, private vulnerability reporting enabled, and strict main protection requires all seven CI contexts, enforces administrators, and prevents force pushes/deletions. Independent human approvals are not required in this sole-maintainer repository; merges must satisfy checks normally.

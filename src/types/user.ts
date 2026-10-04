@@ -5,18 +5,11 @@ const name = z
   .trim()
   .min(1)
   .max(50)
-  .refine(
-    (value) =>
-      [...value].every((character) => {
-        const code = character.charCodeAt(0);
-        return code > 31 && code !== 127;
-      }),
-    'Control characters are not allowed',
-  );
+  .refine((value) => !/\p{Cc}/u.test(value), 'Control characters are not allowed');
 const email = z.string().trim().toLowerCase().max(254).email();
 export const CreateUserInputSchema = z.object({ email, firstName: name, lastName: name }).strict();
 export const UpdateUserInputSchema = CreateUserInputSchema.partial().refine(
-  (value) => Object.keys(value).length > 0,
+  (value) => Object.values(value).some((field) => field !== undefined),
   'At least one field is required',
 );
 export const UserIdSchema = z.string().uuid();

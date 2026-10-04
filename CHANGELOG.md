@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.0.0 — 2026-10-04 (release candidate)
 
+- Reject Unicode control characters and undefined-only service updates before repository work.
 - Repair the compiled entry point, remove global container mocks, and share app construction between tests and runtime.
 - Add regression-first coverage of complete partial-update responses, normalized-email conflicts, JSON errors and input boundaries.
 - Supply explicit MySQL schema migrations, guarded test databases, uniqueness-race and persistence tests.

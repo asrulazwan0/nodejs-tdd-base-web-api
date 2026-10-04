@@ -12,7 +12,7 @@ Status: implementation and verification in progress. No stable release is claime
 - [x] License/metadata/runtime image agree; source/template excludes private tooling and secrets.
 - [x] Clean archive adoption passes against an isolated database.
 - [ ] Required exact-candidate GitHub CI is green.
-- [ ] Repository release/template/security settings verified.
+- [x] Repository release/template/security settings verified.
 - [ ] Tag/archive/GitHub source release published and verified.
 
 [Verification evidence](verification-evidence.md) records commands, revisions and limitations. Both local checkouts must contain the intended source; preserved local environment/agent files are not release assets. Existing production/development databases are never reset by verification.
