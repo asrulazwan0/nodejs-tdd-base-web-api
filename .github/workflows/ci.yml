@@ -133,3 +133,32 @@ jobs:
           -v "$PWD:/repo:ro"
           ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f
           git /repo --redact --no-banner --log-opts=--all
+
+  development:
+    name: Docker development reload
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      COMPOSE_PROJECT_NAME: tdd-dev-ci-${{ github.run_id }}-${{ github.run_attempt }}
+      DB_PORT: 33319
+      PORT: 33320
+      SMOKE_BASE_URL: http://127.0.0.1:33320
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+      - name: Build development stack and migrate a fresh schema
+        run: docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.dev.yml up --build --wait --wait-timeout 180
+      - run: node scripts/verify-reload.mjs
+      - run: npm run smoke
+      - name: Verify source restoration
+        run: git diff --exit-code -- src
+      - name: Logs
+        if: always()
+        run: docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.dev.yml logs --no-color
+      - name: Scoped cleanup
+        if: always()
+        run: docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.dev.yml down --volumes --remove-orphans

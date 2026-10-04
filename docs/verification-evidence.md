@@ -20,6 +20,14 @@ Linux (Node 24.13.1/npm 11): `npm ci`, `npm run check` passed with 65 unit/HTTP 
 
 Compiled native migration/startup/CRUD/conflict/JSON-error/documentation smoke and graceful SIGTERM shutdown passed using the explicit disposable MySQL schema. Startup rejects pending migrations, unavailable databases and occupied ports. Shutdown tests prove HTTP drains before database close and a timeout bounds stuck cleanup.
 
-Production Docker built from the checkout, migrated a fresh MySQL schema and became ready. Docker test/Windows/adoption/review/remote release gates are still being verified. Local logs include `/tmp/tdd-check.log`, `/tmp/tdd-coverage.log`, `/tmp/tdd-native.log`, `/tmp/tdd-final-audit.json`, `/tmp/tdd-production.log` and `/tmp/tdd-docker-tests.log`. Durable exact-candidate CI is required before a stable release.
+Candidate source: `29bc21ab61e8cd27792985e81da8ebf1f4f33351`; later commits record evidence and make the development reload acceptance durable in CI.
+
+Windows Node 24.15.0/npm 11.12.1: native `npm ci`, `npm run check` (65 tests), and full MySQL coverage (77 tests, same percentages as Linux) passed in the existing Windows checkout. Its compiled migration/startup/real HTTP smoke passed using a separate disposable `windows_api_test` schema. POSIX graceful SIGTERM behavior is verified on Linux; Windows child termination is checked for cleanup, not claimed as POSIX signal delivery.
+
+Production Docker built from the checkout, migrated a fresh MySQL schema, became ready and passed real HTTP CRUD/conflict/validation/JSON/docs smoke. Runtime UID is 1000. The exact license matches the source, and source/tests/environment/compiler files are excluded from the runtime. Docker isolated coverage passed all 77 tests and removed only its own stack. Development Docker migrated a fresh schema, passed smoke, observed an actual source edit over HTTP, and observed exact restoration/reload.
+
+A fresh `git archive` extraction passed `npm ci`, `npm run check` and compiled native migration/startup/HTTP smoke. Local Gitleaks scanned all 17 candidate-history commits and found no leaks. Postman regeneration produces no diff.
+
+Draft [PR #1](https://github.com/asrulazwan0/nodejs-tdd-base-web-api/pull/1) makes the result reviewable. Initial [candidate CI](https://github.com/asrulazwan0/nodejs-tdd-base-web-api/actions/runs/37192588151) was in progress when this evidence update was prepared; final CI/publication are separate gates. Local logs include `/tmp/tdd-check.log`, `/tmp/tdd-coverage.log`, `/tmp/tdd-native.log`, `/tmp/tdd-final-audit.json`, `/tmp/tdd-production.log` and `/tmp/tdd-docker-tests.log`. Durable exact-candidate CI is required before a stable release.
 
 The clean architecture starter also passed a fresh local `npm run check` with its 66 unit/30 HTTP tests; its released PostgreSQL/container verification remains recorded in that project's existing release evidence.
