@@ -1,58 +1,24 @@
-/**
- * User type definitions
- * Defines the structure and validation schema for user data
- */
-
 import { z } from 'zod';
 
-/**
- * User interface representing the core user entity
- */
-export interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-/**
- * Zod schema for validating user data
- */
-export const UserSchema = z.object({
-  id: z.string().uuid(),
-  email: z.string().email(),
-  firstName: z.string().min(1).max(50),
-  lastName: z.string().min(1).max(50),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-});
-
-/**
- * Schema for user creation input validation
- */
-export const CreateUserInputSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  firstName: z.string().min(1, 'First name is required').max(50, 'First name too long'),
-  lastName: z.string().min(1, 'Last name is required').max(50, 'Last name too long'),
-});
-
-/**
- * Schema for user update input validation
- */
-export const UpdateUserInputSchema = z.object({
-  email: z.string().email('Invalid email address').optional(),
-  firstName: z.string().min(1, 'First name must be at least 1 character').max(50, 'First name too long').optional(),
-  lastName: z.string().min(1, 'Last name must be at least 1 character').max(50, 'Last name too long').optional(),
-});
-
-/**
- * Type for user creation input
- */
+const name = z
+  .string()
+  .trim()
+  .min(1)
+  .max(50)
+  .refine((value) => !/\p{Cc}/u.test(value), 'Control characters are not allowed');
+const email = z.string().trim().toLowerCase().max(254).email();
+export const CreateUserInputSchema = z.object({ email, firstName: name, lastName: name }).strict();
+export const UpdateUserInputSchema = CreateUserInputSchema.partial().refine(
+  (value) => Object.values(value).some((field) => field !== undefined),
+  'At least one field is required',
+);
+export const UserIdSchema = z.string().uuid();
+export const ListUsersSchema = z
+  .object({
+    limit: z.coerce.number().int().min(1).max(100).default(100),
+    offset: z.coerce.number().int().min(0).max(1000000).default(0),
+  })
+  .strict();
 export type CreateUserInput = z.infer<typeof CreateUserInputSchema>;
-
-/**
- * Type for user update input
- */
 export type UpdateUserInput = z.infer<typeof UpdateUserInputSchema>;
+export type ListUsersInput = z.infer<typeof ListUsersSchema>;

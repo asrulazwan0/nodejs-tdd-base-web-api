@@ -1,44 +1,32 @@
-# Multi-stage Dockerfile
-
-# Development stage
-FROM node:20-alpine AS development
-
-WORKDIR /usr/src/app
-
-# Copy package.json and package-lock.json
-COPY package*.json ./
-
-# Install all dependencies (including dev dependencies)
+FROM node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS dependencies
+WORKDIR /app
+COPY package.json package-lock.json ./
 RUN npm ci
 
-# Copy the rest of the application code
+FROM dependencies AS development
 COPY . .
+ENV HOST=0.0.0.0
+USER node
+CMD ["npm", "run", "dev"]
 
-# Expose the port the app runs on
-EXPOSE 3000
-
-# Define the command to run the application in development
-CMD [ "npm", "run", "dev" ]
-
-# Production stage
-FROM node:20-alpine AS production
-
-WORKDIR /usr/src/app
-
-# Copy package.json and package-lock.json
-COPY package*.json ./
-
-# Install only production dependencies
-RUN npm ci --only=production
-
-# Copy the rest of the application code
+FROM dependencies AS test
 COPY . .
+CMD ["npm", "run", "test:coverage"]
 
-# Build the TypeScript code
+FROM dependencies AS build
+COPY tsconfig*.json openapi.json ./
+COPY src ./src
+COPY scripts/clean.mjs ./scripts/clean.mjs
 RUN npm run build
 
-# Expose the port the app runs on
+FROM node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS production
+WORKDIR /app
+ENV NODE_ENV=production HOST=0.0.0.0
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev && npm cache clean --force
+COPY --from=build /app/dist ./dist
+COPY openapi.json LICENSE ./
+USER node
 EXPOSE 3000
-
-# Define the command to run the application in production
-CMD [ "npm", "run", "start" ]
+HEALTHCHECK --interval=10s --timeout=3s --start-period=20s CMD node -e "fetch('http://127.0.0.1:'+process.env.PORT+'/health/ready',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+CMD ["node", "dist/index.js"]

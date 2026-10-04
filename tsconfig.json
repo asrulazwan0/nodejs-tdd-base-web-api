@@ -1,66 +1,20 @@
 {
   "compilerOptions": {
-    /* Basic Options */
     "target": "ES2022",
     "module": "commonjs",
+    "moduleResolution": "node",
     "lib": ["ES2022"],
-    "allowJs": true,
-    "outDir": "./dist",
-    "rootDir": ".",
-    "removeComments": true,
-    "noEmit": false,
-    "incremental": true,
-
-    /* Strict Type-Checking Options */
     "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictBindCallApply": true,
-    "strictPropertyInitialization": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
-
-    /* Additional Checks */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "allowUnreachableCode": false,
-    "forceConsistentCasingInFileNames": true,
-
-    /* Module Resolution Options */
-    "moduleResolution": "node",
-    "baseUrl": "./",
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
-    "allowUmdGlobalAccess": false,
-
-    /* Source Map Options */
-    "sourceMap": true,
-    "inlineSourceMap": false,
-    "declaration": true,
-    "declarationMap": true,
-    "emitDeclarationOnly": false,
-
-    /* Experimental Options */
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-
-    /* Advanced Options */
     "skipLibCheck": true,
-    "jsx": "react"
+    "noEmit": true
   },
-  "include": ["src/**/*", "tests/**/*"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "coverage",
-    "eslint.config.js",
-    "jest.config.ts",
-    "prettier.config.js"
-  ]
+  "include": ["src/**/*.ts", "tests/**/*.ts"]
 }

@@ -1,37 +1,52 @@
-version: '3.8'
-
 services:
-  app:
-    build: .
+  db:
+    image: mysql:8.4@sha256:6ea90827b1100f8f2ae306a539f86d2c264a26ed435a2a9f75551dd5c3aeb242
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-local-root-only-change-me}
+      MYSQL_DATABASE: ${DB_NAME:-tdd_api}
+      MYSQL_USER: ${DB_USERNAME:-tdd_app}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-local-only-change-me}
     ports:
-      - "3000:3000"
+      - '127.0.0.1:${DB_PORT:-3306}:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 --silent']
+      interval: 2s
+      timeout: 3s
+      retries: 40
+  migrate:
+    build:
+      context: .
+      target: production
+    environment: &app-environment
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USERNAME: ${DB_USERNAME:-tdd_app}
+      DB_PASSWORD: ${DB_PASSWORD:-local-only-change-me}
+      DB_NAME: ${DB_NAME:-tdd_api}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      CORS_ORIGIN: ${CORS_ORIGIN:-}
+      TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:-0}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
     depends_on:
       db:
         condition: service_healthy
-    environment:
-      - NODE_ENV=production
-      - DB_HOST=db
-      - DB_PORT=3306
-      - DB_USERNAME=root
-      - DB_PASSWORD=password
-      - DB_NAME=nodejs_tdd_api
-      - PORT=3000
-    restart: unless-stopped
-
-  db:
-    image: mysql:8.0
+    command: ['node', 'dist/config/migrate.js', 'run']
+  app:
+    build:
+      context: .
+      target: production
+    environment: *app-environment
     ports:
-      - "3307:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: nodejs_tdd_api
-    volumes:
-      - mysql_data:/var/lib/mysql
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
-
+      - '127.0.0.1:${PORT:-3000}:3000'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    init: true
+    stop_grace_period: 15s
 volumes:
   mysql_data:

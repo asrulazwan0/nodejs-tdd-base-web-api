@@ -1,98 +1,36 @@
-/**
- * User service
- * Contains business logic for user operations
- */
+import type { IUserRepository } from '../repositories/IUserRepository';
+import type { User } from '../entities/User';
+import {
+  CreateUserInputSchema,
+  UpdateUserInputSchema,
+  UserIdSchema,
+  ListUsersSchema,
+} from '../types/user';
+import { ApiError } from '../errors';
 
-import { User } from '../entities/User';
-import { CreateUserInput, UpdateUserInput } from '../types/user';
-import { UserRepository } from '../repositories/UserRepository';
-import { Container } from 'typedi';
-
-/**
- * Get all users
- * @returns Array of all users
- */
-export const getAllUsers = async (): Promise<User[]> => {
-  try {
-    const userRepository = Container.get(UserRepository);
-    return await userRepository.findAll();
-  } catch (error) {
-    console.error('Error retrieving users:', error);
-    throw error;
+/** Business operations with explicit dependencies and validated service inputs. */
+export class UserService {
+  constructor(private readonly users: IUserRepository) {}
+  async getAll(input: unknown = {}): Promise<User[]> {
+    return this.users.findAll(ListUsersSchema.parse(input));
   }
-};
-
-/**
- * Get user by ID
- * @param id - User ID
- * @returns User object or null if not found
- */
-export const getUserById = async (id: string): Promise<User | null> => {
-  try {
-    const userRepository = Container.get(UserRepository);
-    return await userRepository.findById(id);
-  } catch (error) {
-    console.error('Error retrieving user:', error);
-    throw error;
+  async getById(id: string): Promise<User> {
+    const user = await this.users.findById(UserIdSchema.parse(id));
+    if (!user) throw new ApiError(404, 'USER_NOT_FOUND', 'User not found');
+    return user;
   }
-};
-
-/**
- * Create a new user
- * @param userData - User data to create
- * @returns Created user object
- */
-export const createUser = async (userData: CreateUserInput): Promise<User> => {
-  try {
-    const userRepository = Container.get(UserRepository);
-
-    const newUser = await userRepository.create({
-      email: userData.email,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-    });
-
-    return newUser;
-  } catch (error) {
-    console.error('Error creating user:', error);
-    throw error;
+  async create(input: unknown): Promise<User> {
+    return this.users.create(CreateUserInputSchema.parse(input));
   }
-};
-
-/**
- * Update an existing user
- * @param id - User ID to update
- * @param userData - Updated user data
- * @returns Updated user object or null if not found
- */
-export const updateUser = async (id: string, userData: UpdateUserInput): Promise<User | null> => {
-  try {
-    const userRepository = Container.get(UserRepository);
-
-    const updatedUser = await userRepository.update(id, {
-      email: userData.email,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-    });
-
-    return updatedUser;
-  } catch (error) {
-    console.error('Error updating user:', error);
-    throw error;
+  async update(id: string, input: unknown): Promise<User> {
+    const validId = UserIdSchema.parse(id);
+    const user = await this.users.update(validId, UpdateUserInputSchema.parse(input));
+    if (!user) throw new ApiError(404, 'USER_NOT_FOUND', 'User not found');
+    return user;
   }
-};
-
-/**
- * Delete a user
- * @param id - User ID to delete
- * @returns True if deleted, false if not found
- */
-export const deleteUser = async (id: string): Promise<boolean> => {
-  try {
-    const userRepository = Container.get(UserRepository);
-    return await userRepository.delete(id);
-  } catch (error) {
-    console.error('Error deleting user:', error);
-    throw error;
+  async delete(id: string): Promise<void> {
+    if (!(await this.users.delete(UserIdSchema.parse(id)))) {
+      throw new ApiError(404, 'USER_NOT_FOUND', 'User not found');
+    }
   }
-};
+}

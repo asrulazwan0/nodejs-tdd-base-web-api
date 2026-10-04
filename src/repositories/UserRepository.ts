@@ -1,43 +1,53 @@
-import { Repository, DataSource } from 'typeorm';
+import { type DataSource, type Repository, QueryFailedError } from 'typeorm';
 import { User } from '../entities/User';
-import { IUserRepository } from './IUserRepository';
+import type { IUserRepository } from './IUserRepository';
+import type { CreateUserInput, UpdateUserInput, ListUsersInput } from '../types/user';
+import { emailConflict } from '../errors';
 
+/** MySQL is the authority for uniqueness, including concurrent requests. */
 export class UserRepository implements IUserRepository {
-  private userRepository: Repository<User>;
-
-  constructor(private dataSource: DataSource) {
-    this.userRepository = this.dataSource.getRepository(User);
+  private readonly users: Repository<User>;
+  constructor(dataSource: DataSource) {
+    this.users = dataSource.getRepository(User);
   }
-
-  async findAll(): Promise<User[]> {
-    return await this.userRepository.find();
+  findAll({ limit, offset }: ListUsersInput): Promise<User[]> {
+    return this.users.find({ take: limit, skip: offset, order: { createdAt: 'ASC', id: 'ASC' } });
   }
-
-  async findById(id: string): Promise<User | null> {
-    const user = await this.userRepository.findOne({
-      where: { id },
-    });
-    return user || null;
+  findById(id: string): Promise<User | null> {
+    return this.users.findOneBy({ id });
   }
-
-  async create(userData: Partial<User>): Promise<User> {
-    const user = this.userRepository.create(userData);
-    return await this.userRepository.save(user);
-  }
-
-  async update(id: string, userData: Partial<User>): Promise<User | null> {
-    const user = await this.findById(id);
-
-    if (!user) {
-      return null;
+  async create(input: CreateUserInput): Promise<User> {
+    try {
+      return await this.users.save(this.users.create(input));
+    } catch (error) {
+      return this.translate(error);
     }
-
-    Object.assign(user, userData);
-    return await this.userRepository.save(user);
   }
-
+  async update(id: string, input: UpdateUserInput): Promise<User | null> {
+    try {
+      const result = await this.users.update(id, {
+        ...input,
+        updatedAt: () => 'CURRENT_TIMESTAMP(6)',
+      });
+      return result.affected ? this.findById(id) : null;
+    } catch (error) {
+      return this.translate(error);
+    }
+  }
   async delete(id: string): Promise<boolean> {
-    const result = await this.userRepository.delete(id);
-    return result.affected !== 0;
+    const result = await this.users.delete(id);
+    return (result.affected ?? 0) > 0;
+  }
+  private translate(error: unknown): never {
+    if (
+      error instanceof QueryFailedError &&
+      typeof error.driverError === 'object' &&
+      error.driverError !== null &&
+      'code' in error.driverError &&
+      error.driverError.code === 'ER_DUP_ENTRY'
+    ) {
+      throw emailConflict();
+    }
+    throw error;
   }
 }

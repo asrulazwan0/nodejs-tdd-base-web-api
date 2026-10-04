@@ -1,43 +1,16 @@
-version: '3.8'
-
 services:
+  migrate:
+    build:
+      target: development
+    environment:
+      NODE_ENV: development
+    command: ['npm', 'run', 'migration:run']
   app:
     build:
-      context: .
       target: development
-    volumes:
-      - .:/usr/src/app
-      - /usr/src/app/node_modules
-    ports:
-      - "3000:3000"
-    depends_on:
-      db:
-        condition: service_healthy
     environment:
-      - NODE_ENV=development
-      - DB_HOST=db
-      - DB_PORT=3306
-      - DB_USERNAME=root
-      - DB_PASSWORD=password
-      - DB_NAME=nodejs_tdd_api
-      - PORT=3000
-    command: npm run dev
-    restart: unless-stopped
-
-  db:
-    image: mysql:8.0
-    ports:
-      - "3308:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: nodejs_tdd_api
+      NODE_ENV: development
     volumes:
-      - mysql_data:/var/lib/mysql
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
-
-volumes:
-  mysql_data:
+      - .:/app
+      - /app/node_modules
+    command: ['npm', 'run', 'dev']
