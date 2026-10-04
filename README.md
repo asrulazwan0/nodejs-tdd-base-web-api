@@ -1,140 +1,113 @@
 # Node.js TDD Web API Starter
 
-A clean, production-ready, TDD-first Node.js + TypeScript starter for RESTful web APIs. Designed for developers to fork, learn, and build upon.
+A small, test-first TypeScript and Express API foundation with Jest, Supertest, MySQL 8.4 and TypeORM. Start natively or in Docker. This is a source/template repository, not an npm package.
 
-## Tech Stack
+The complete profile CRUD example demonstrates controllers → services → repositories. Explicit constructor dependencies make unit tests small; HTTP tests construct the same application as the running server; real MySQL tests prove migrations, uniqueness races and persistence. No global mocks or separate test app are required.
 
-- Runtime: Node.js 20+
-- Language: TypeScript (strict mode)
-- Framework: Express (minimal, no bloat)
-- Testing: Jest + Supertest (100% test coverage goal)
-- Linting: ESLint + Prettier
-- Logging: Pino
-- Validation: Zod
-- Documentation: OpenAPI 3.0 (Swagger UI)
+This example has no authentication or authorization. Profiles are not login accounts. Add your own access policy before exposing profile operations in a consuming application.
 
-## Quick Start
+## Which starter?
 
-### Without Docker
+|           | This TDD starter                                | Clean architecture starter                            |
+| --------- | ----------------------------------------------- | ----------------------------------------------------- |
+| Focus     | Learn and extend through red → green → refactor | Keep business rules independent of framework adapters |
+| Structure | Controllers, services, repositories, entities   | Domain, application, infrastructure                   |
+| Database  | MySQL 8.4                                       | PostgreSQL 16                                         |
+| Tests     | Jest + Supertest                                | Vitest + Supertest                                    |
+| Injection | Explicit constructor dependencies               | Awilix                                                |
+| Example   | Profile create/read/list/update/delete          | Profile creation                                      |
 
-1. Install dependencies:
+TDD and clean architecture can be used together. Both projects require meaningful tests, explicit migrations, native/Docker workflows, and release evidence. See [the TDD guide](docs/tdd.md) and [architecture](docs/architecture.md).
 
-```bash
-npm install
+## Native quickstart
+
+Requirements: Node.js 24, npm 11, and a reachable MySQL 8.4 server. Provision a separate application database and application role first; see [database setup](docs/operations.md). Docker is optional.
+
+```sh
+npm ci
+cp .env.example .env
 ```
 
-2. Run tests:
+In PowerShell, use `Copy-Item .env.example .env`. Edit `.env` to select your database and credentials. Environment variables supplied by your shell take precedence. The application does not create databases, synchronize schemas, or run migrations automatically.
 
-```bash
-npm test
-```
-
-3. Run development server:
-
-```bash
+```sh
+npm run migration:run
 npm run dev
 ```
 
-4. Build for production:
+Development reloads source changes. In another terminal, check `http://127.0.0.1:3000/health/ready` and `http://127.0.0.1:3000/api-docs/`.
 
-```bash
+```sh
+curl -X POST http://127.0.0.1:3000/users -H 'Content-Type: application/json' -d '{"email":"profile@example.test","firstName":"Example","lastName":"Profile"}'
+```
+
+PowerShell users can send the same JSON with `Invoke-RestMethod -Method Post -Uri http://127.0.0.1:3000/users -ContentType application/json -Body '{"email":"profile@example.test","firstName":"Example","lastName":"Profile"}'`.
+
+For a compiled run, stop development first:
+
+```sh
 npm run build
+npm run migration:run:prod
+npm start
 ```
 
-### With Docker
+Set `NODE_ENV=production` in `.env` or your deployment environment for production. `npm start` starts the compiled app at `dist/index.js`. Migrations must complete before startup. The listener binds to `127.0.0.1` by default; set `HOST=0.0.0.0` where container or deployment networking requires it.
 
-1. Build and run with Docker Compose:
+## Docker
 
-```bash
-# For production
-docker-compose up --build
+The examples use local-only credentials and preserve database data on ordinary shutdown. Use one API workflow at a time on the default port.
 
-# For development
-docker-compose -f docker-compose.dev.yml up --build
+```sh
+# MySQL only, with a native API
+# Set DB_PORT in .env.example or pass a different Compose env file if 3306 is occupied.
+docker compose --env-file .env.example up -d db
+
+# Entire production reference stack, including an explicit migration job
+docker compose --env-file .env.example up --build --wait
+
+# Entire development stack, with source reload
+docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
-2. The application will be available at `http://localhost:3000`
-3. The API documentation will be available at `http://localhost:3000/api-docs`
+Stop the same stack with `docker compose --env-file .env.example down`; include both `-f` options for development. Do not add `--volumes` unless you intend to delete its data. MySQL is published only on the host loopback address. The production image runs as a non-root user and includes the application license.
 
-## Available Scripts
+## Tests and quality
 
-- `npm run build` - Compile TypeScript to JavaScript
-- `npm run dev` - Start development server with ts-node
-- `npm run start` - Start production server
-- `npm test` - Run tests with Jest
-- `npm run test:watch` - Run tests in watch mode
-- `npm run test:coverage` - Run tests with coverage report
-- `npm run lint` - Check code with ESLint
-- `npm run lint:fix` - Fix linting issues automatically
-- `npm run format` - Format code with Prettier
-- `npm run format:check` - Check if code is formatted correctly
-- `npm run type-check` - Run TypeScript type checking
-- `npm run docs:generate` - Generate OpenAPI documentation
+Unit and HTTP tests need no database:
 
-## TDD Workflow
-
-Every feature must start with a failing test. Follow the Red → Green → Refactor cycle strictly. No business logic should be in route handlers—use the service layer instead.
-
-## Project Structure
-
-```
-src/
-├── app/              # Application entry point
-├── controllers/      # Request handlers
-├── domain/           # Business logic and entities
-├── infrastructure/   # External integrations
-├── middleware/       # Express middleware
-├── routes/           # Route definitions
-├── services/         # Business logic
-├── types/            # Type definitions
-├── utils/            # Utility functions
-└── ...
-tests/               # Test files
+```sh
+npm test
+npm run test:watch
+npm run check
 ```
 
-## API Endpoints
+Run full coverage and real MySQL tests in a unique disposable Docker project:
 
-### Documentation
-- `GET /api-docs` - Interactive API documentation (Swagger UI)
-
-### Health Check
-- `GET /health` - Returns the health status of the application
-
-### Users
-- `GET /users` - Retrieve all users
-- `GET /users/:id` - Retrieve a specific user by ID
-- `POST /users` - Create a new user
-- `PUT /users/:id` - Update an existing user
-- `DELETE /users/:id` - Delete a user
-
-#### User Object
-```json
-{
-  "id": "uuid-string",
-  "email": "user@example.com",
-  "firstName": "John",
-  "lastName": "Doe",
-  "createdAt": "2023-01-01T00:00:00.000Z",
-  "updatedAt": "2023-01-01T00:00:00.000Z"
-}
+```sh
+npm run test:docker
 ```
 
-#### Creating a User
-Request body:
-```json
-{
-  "email": "john.doe@example.com",
-  "firstName": "John",
-  "lastName": "Doe"
-}
+Alternatively, create a separate database named with an `_test` suffix, copy `.env.test.example` to `.env.test`, and set the explicit credentials and reset opt-in. Tests delete rows in that selected database. They refuse a missing opt-in, a non-test name, or the current application database.
+
+```sh
+npm run test:integration
+npm run test:coverage
 ```
 
-#### Updating a User
-Request body (all fields optional):
-```json
-{
-  "email": "newemail@example.com",
-  "firstName": "Jane",
-  "lastName": "Smith"
-}
-```
+Coverage includes all application source. Thresholds are 80% statements/lines/functions and 70% branches. Integration tests establish MySQL behavior; a fake repository cannot prove SQL constraints or migrations. Run `npm run audit` for the dependency gate.
+
+## API contract
+
+[openapi.json](openapi.json) is authoritative. `GET /openapi.json` serves it; `/api-docs/` provides Swagger UI. `npm run docs:generate` derives the checked-in Postman collection.
+
+Successful responses retain direct profile objects or arrays. Errors contain `error`, `code`, and `requestId`; validation errors also contain `details`. Creation returns 201, deletion 204, invalid input 400, missing profiles 404, email conflicts 409, oversized bodies 413, and rate limits 429. Unexpected failures return generic 500 JSON.
+
+Emails are trimmed and lowercased. Names are trimmed, contain 1–50 characters, and reject control characters. Updates require at least one known field and return the complete profile. Profile IDs must be UUIDs. Listing returns at most 100 profiles; use `limit` and `offset` for pagination.
+
+Liveness is `/health/live` (also `/health`); readiness is `/health/ready`. CORS is disabled unless `CORS_ORIGIN` lists allowed origins. Rate limits use process-local memory; distributed deployments need an appropriate shared limiter. `TRUST_PROXY_HOPS` must match your actual proxy topology.
+
+## Make it your project
+
+Update package identity, repository/homepage/bugs links, docs and changelog after cloning or using the template. Keep the MIT notice. Follow [contributing](CONTRIBUTING.md), [security](SECURITY.md), and [operations](docs/operations.md). [Release readiness](docs/release-checklist.md) records completed checks and remaining gates.
+
+Licensed under [MIT](LICENSE).

@@ -1,0 +1,30 @@
+services:
+  db:
+    image: mysql:8.4@sha256:6ea90827b1100f8f2ae306a539f86d2c264a26ed435a2a9f75551dd5c3aeb242
+    environment:
+      MYSQL_ROOT_PASSWORD: isolated-root-only
+      MYSQL_DATABASE: tdd_api_test
+      MYSQL_USER: tdd_test
+      MYSQL_PASSWORD: isolated-test-only
+    tmpfs:
+      - /var/lib/mysql
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 --silent']
+      interval: 2s
+      timeout: 3s
+      retries: 40
+  test:
+    build:
+      context: .
+      target: test
+    environment:
+      NODE_ENV: test
+      TEST_DB_HOST: db
+      TEST_DB_PORT: 3306
+      TEST_DB_USERNAME: tdd_test
+      TEST_DB_PASSWORD: isolated-test-only
+      TEST_DB_NAME: tdd_api_test
+      ALLOW_TEST_DATABASE_RESET: 'true'
+    depends_on:
+      db:
+        condition: service_healthy

@@ -137,3 +137,8 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Explicit test examples and personal agent tooling
+!.env.test.example
+.qwen/
+QWEN.md

@@ -1,38 +1,135 @@
 name: CI
-
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
-
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: tdd-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
+  native:
+    name: Native (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     strategy:
+      fail-fast: false
       matrix:
-        node-version: [18.x, 20.x]
-
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
-    - uses: actions/checkout@v4
-
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Run type checking
-      run: npm run type-check
-
-    - name: Run linting
-      run: npm run lint
-
-    - name: Run tests with coverage
-      run: npm run test:coverage
-
-    - name: Build
-      run: npm run build
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+  mysql:
+    name: MySQL and coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.4@sha256:6ea90827b1100f8f2ae306a539f86d2c264a26ed435a2a9f75551dd5c3aeb242
+        env:
+          MYSQL_ROOT_PASSWORD: ci-root-only
+          MYSQL_DATABASE: tdd_api_test
+          MYSQL_USER: tdd_test
+          MYSQL_PASSWORD: ci-test-only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 --silent"
+          --health-interval 2s --health-timeout 3s --health-retries 40
+    env:
+      TEST_DB_HOST: 127.0.0.1
+      TEST_DB_PORT: 3306
+      TEST_DB_USERNAME: tdd_test
+      TEST_DB_PASSWORD: ci-test-only
+      TEST_DB_NAME: tdd_api_test
+      ALLOW_TEST_DATABASE_RESET: 'true'
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USERNAME: tdd_test
+      DB_PASSWORD: ci-test-only
+      DB_NAME: native_api_test
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run test:coverage
+      - run: npm run audit
+      - name: Compiled native startup and HTTP smoke on the disposable test schema
+        run: node scripts/verify-native.mjs
+        env:
+          DB_NAME: tdd_api_test
+  containers:
+    name: Container tests and production adoption
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      COMPOSE_PROJECT_NAME: tdd-ci-${{ github.run_id }}-${{ github.run_attempt }}
+      DB_PORT: 33316
+      PORT: 33317
+      SMOKE_BASE_URL: http://127.0.0.1:33317
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+      - run: npm run test:docker
+      - name: Download and byte-compare the exact candidate source archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/tarball/$GITHUB_SHA" > "$RUNNER_TEMP/source.tar.gz"
+          mkdir "$RUNNER_TEMP/source"
+          tar -xzf "$RUNNER_TEMP/source.tar.gz" --strip-components=1 -C "$RUNNER_TEMP/source"
+          git ls-files -z | while IFS= read -r -d '' file; do
+            cmp "$file" "$RUNNER_TEMP/source/$file"
+          done
+      - name: Production build and fresh-schema migration
+        working-directory: ${{ runner.temp }}/source
+        run: docker compose --env-file .env.example up --build --wait --wait-timeout 180
+      - run: npm run smoke
+        working-directory: ${{ runner.temp }}/source
+      - name: Verify non-root runtime and application license
+        working-directory: ${{ runner.temp }}/source
+        run: |
+          test "$(docker compose --env-file .env.example exec -T app id -u)" != 0
+          docker compose --env-file .env.example exec -T app cat /app/LICENSE | cmp - LICENSE
+      - name: Logs
+        if: always()
+        working-directory: ${{ runner.temp }}/source
+        run: docker compose --env-file .env.example logs --no-color
+      - name: Scoped cleanup
+        if: always()
+        working-directory: ${{ runner.temp }}/source
+        run: docker compose --env-file .env.example down --volumes --remove-orphans
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - run: >-
+          docker run --rm --network none
+          -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0=/repo
+          -v "$PWD:/repo:ro"
+          ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f
+          git /repo --redact --no-banner --log-opts=--all

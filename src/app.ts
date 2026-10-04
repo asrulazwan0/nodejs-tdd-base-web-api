@@ -1,101 +1,144 @@
-/**
- * Main application entry point
- * Sets up the Express app with middleware and routes
- */
-
-import express from 'express';
+import 'reflect-metadata';
+import express, { type ErrorRequestHandler } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import { rateLimit } from 'express-rate-limit';
 import swaggerUi from 'swagger-ui-express';
-import swaggerJsdoc from 'swagger-jsdoc';
-import { useContainer } from 'typeorm';
-import { Container } from 'typedi';
-import { AppDataSource } from './config/database';
-import { UserRepository } from './repositories/UserRepository';
+import { randomUUID } from 'node:crypto';
+import { ZodError } from 'zod';
+import type { Logger } from 'pino';
+import type { IUserRepository } from './repositories/IUserRepository';
+import type { Config } from './config/environment';
+import { UserService } from './services/user.service';
+import { createUserRouter } from './controllers/user.controller';
+import { ApiError } from './errors';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
-// Load environment variables
-dotenv.config();
-
-// Import routes
-import { healthRouter } from './routes/health.route';
-import { userRouter } from './routes/user.route';
-import swaggerOptions from '../swagger.config';
-
-// Tell TypeORM to use the global container
-useContainer(Container);
-
-// Initialize the app
-const app = express();
-
-// Generate Swagger docs
-const specs = swaggerJsdoc(swaggerOptions);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
-
-// Security middleware
-app.use(helmet());
-
-// Enable CORS
-app.use(cors());
-
-// Parse JSON bodies
-app.use(express.json());
-
-// Health check route
-app.use('/health', healthRouter);
-
-// User routes
-app.use('/users', userRouter);
-
-// Error handling middleware
-app.use((err: Error, _req: express.Request, res: express.Response) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
-});
-
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-  console.info('SIGTERM signal received: closing DB connections');
-  await AppDataSource.destroy();
-  process.exit(0);
-});
-
-const PORT = process.env.PORT || 3000;
-
-// Function to initialize database connection with retry logic and start server only after success
-async function initializeDatabaseWithRetry(maxRetries: number, delayMs: number) {
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      await AppDataSource.initialize();
-      console.log('Data Source has been initialized!');
-
-      // Register repositories in the container
-      Container.set(UserRepository, new UserRepository(AppDataSource));
-
-      // Start the server only after database initialization is successful
-      if (require.main === module) {
-        // Only start the server if this file is run directly
-        app.listen(PORT, () => {
-          console.log(`Server is running on port ${PORT}`);
-          console.log(`API Documentation available at http://localhost:${PORT}/api-docs`);
-        });
-      }
-      return;
-    } catch (err) {
-      console.error(`Database initialization failed (attempt ${attempt}/${maxRetries}):`, err);
-
-      if (attempt === maxRetries) {
-        console.error('Max retries reached. Exiting...');
-        process.exit(1);
-      }
-
-      // Wait before retrying
-      await new Promise(resolve => setTimeout(resolve, delayMs));
-    }
-  }
+export interface AppDependencies {
+  users: IUserRepository;
+  config: Config;
+  logger: Logger;
+  isReady: () => Promise<boolean>;
 }
 
-// Initialize database connection with retry logic and start server only after success
-initializeDatabaseWithRetry(10, 3000); // Retry up to 10 times with 3-second delays
-
-export { app };
+/** Construct the same app in tests and runtime without starting connections or listeners. */
+export function createApp({ users, config, logger, isReady }: AppDependencies): express.Express {
+  const app = express();
+  app.disable('x-powered-by');
+  app.set('trust proxy', config.TRUST_PROXY_HOPS);
+  app.use(helmet());
+  app.use(
+    cors({
+      origin: config.CORS_ORIGIN
+        ? config.CORS_ORIGIN.split(',').map((origin) => origin.trim())
+        : false,
+    }),
+  );
+  app.use((req, res, next) => {
+    const provided = req.get('x-request-id');
+    const requestId = provided && /^[a-zA-Z0-9_-]{1,64}$/.test(provided) ? provided : randomUUID();
+    res.locals.requestId = requestId;
+    res.setHeader('x-request-id', requestId);
+    const start = performance.now();
+    res.on('finish', () => {
+      // Only configured route labels; no URL, body, headers, SQL parameters or error objects.
+      const localPattern: unknown = req.route?.path;
+      const route =
+        typeof localPattern === 'string'
+          ? localPattern === '/'
+            ? '/users'
+            : localPattern.startsWith('/health') || localPattern.startsWith('/api')
+              ? localPattern
+              : `/users${localPattern}`
+          : 'unmatched';
+      logger.info(
+        {
+          requestId,
+          method: req.method,
+          route,
+          status: res.statusCode,
+          durationMs: Math.round(performance.now() - start),
+        },
+        'request',
+      );
+    });
+    next();
+  });
+  app.get(['/health', '/health/live'], (_req, res) => {
+    res.json({ status: 'OK' });
+  });
+  app.get('/health/ready', async (_req, res) => {
+    let ready = false;
+    try {
+      ready = await isReady();
+    } catch {
+      /* Do not expose database failures. */
+    }
+    res.status(ready ? 200 : 503).json({ status: ready ? 'OK' : 'UNAVAILABLE' });
+  });
+  const spec: unknown = JSON.parse(readFileSync(resolve(__dirname, '../openapi.json'), 'utf8'));
+  app.get('/openapi.json', (_req, res) => {
+    res.json(spec);
+  });
+  app.use(
+    '/api-docs',
+    helmet({ contentSecurityPolicy: { directives: { scriptSrc: ["'self'", "'unsafe-inline'"] } } }),
+    swaggerUi.serve,
+    swaggerUi.setup(spec as Record<string, unknown>),
+  );
+  app.use(
+    rateLimit({
+      windowMs: 60000,
+      limit: config.RATE_LIMIT_MAX,
+      standardHeaders: 'draft-8',
+      legacyHeaders: false,
+      handler: (_req, _res, next) => next(new ApiError(429, 'RATE_LIMITED', 'Too many requests')),
+    }),
+  );
+  app.use(express.json({ limit: '16kb', strict: true }));
+  app.use('/users', createUserRouter(new UserService(users)));
+  app.use((_req, _res, next) => {
+    next(new ApiError(404, 'NOT_FOUND', 'Route not found'));
+  });
+  const errorHandler: ErrorRequestHandler = (error: unknown, _req, res, _next) => {
+    if (res.headersSent) {
+      _next(error);
+      return;
+    }
+    const requestId: unknown = res.locals.requestId;
+    if (error instanceof ZodError) {
+      res.status(400).json({
+        error: 'Validation failed',
+        code: 'VALIDATION_ERROR',
+        details: error.issues.map((issue) => ({
+          field: issue.path.join('.'),
+          message: issue.message,
+        })),
+        requestId,
+      });
+      return;
+    }
+    if (error instanceof ApiError) {
+      res.status(error.status).json({ error: error.message, code: error.code, requestId });
+      return;
+    }
+    const status =
+      typeof error === 'object' && error !== null && 'status' in error ? error.status : undefined;
+    if (status === 400 || status === 413 || status === 415) {
+      res.status(status).json({
+        error: status === 413 ? 'Request body too large' : 'Invalid request body',
+        code: 'INVALID_BODY',
+        requestId,
+      });
+      return;
+    }
+    logger.error(
+      { requestId, errorType: error instanceof Error ? error.name : 'UnknownError' },
+      'request failed',
+    );
+    res.status(500).json({ error: 'Internal server error', code: 'INTERNAL_ERROR', requestId });
+  };
+  app.use(errorHandler);
+  return app;
+}
