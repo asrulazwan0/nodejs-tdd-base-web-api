@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import request from 'supertest';
 import * as environment from '../../src/config/environment';
 import * as database from '../../src/config/database';
@@ -56,4 +57,14 @@ test('failed connection never claims a listener or destroys an uninitialized con
   jest.spyOn(db, 'initialize').mockRejectedValue(new Error('private connection details'));
   await expect(start()).rejects.toThrow('Startup failed');
   expect(db.destroy).not.toHaveBeenCalled();
+});
+
+test('executable startup reports invalid configuration keys without exposing values', () => {
+  const result = spawnSync(process.execPath, ['--import', 'tsx', 'src/index.ts'], {
+    encoding: 'utf8',
+    env: { ...process.env, PORT: 'bad', DB_PASSWORD: 'private-configuration-marker' },
+  });
+  expect(result.status).toBe(1);
+  expect(result.stderr).toContain('Invalid configuration: PORT');
+  expect(result.stderr).not.toContain('private-configuration-marker');
 });

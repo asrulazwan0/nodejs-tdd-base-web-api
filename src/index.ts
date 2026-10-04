@@ -48,7 +48,12 @@ export async function start(): Promise<RunningServer> {
   }
 }
 if (require.main === module) {
-  start().catch(() => {
+  start().catch((error: unknown) => {
+    console.error(
+      error instanceof Error && error.message.startsWith('Invalid configuration:')
+        ? error.message
+        : 'Startup failed',
+    );
     process.exitCode = 1;
   });
 }

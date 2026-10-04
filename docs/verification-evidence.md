@@ -41,3 +41,5 @@ All seven checks passed for [CI 37192783974](https://github.com/asrulazwan0/node
 Repository settings were read back: GitHub template enabled, private vulnerability reporting enabled, and strict main protection requires all seven CI contexts, enforces administrators, and prevents force pushes/deletions. Independent human approvals are not required in this sole-maintainer repository; merges must satisfy checks normally.
 
 Final source checks passed all 79 tests, including 12 real MySQL tests. Full-source coverage is 93.56% statements, 89.47% branches, 91.93% functions and 94.00% lines. The 80/70/80/80 thresholds remain unchanged. `npm run check` passed 67 unit/HTTP tests plus format/lint/types/build. Source fix commit: `3fe041d`.
+
+Executable invalid-configuration startup was also reproduced red: it exited nonzero without reporting the configuration keys. The entry point now reports only the validated key names (never values) and has a subprocess regression. Final suite: 80 tests (68 unit/HTTP, 12 MySQL). Local red log: `/tmp/tdd-red-startup-config.log`. Earlier counts above are historical candidate evidence.
